@@ -20,6 +20,7 @@ public class ChromeTest {
             Page page = browser.newPage();
             page.navigate("https://playwright.dev/");
             System.out.println(browser.browserType().name()+ "-->" + browser.version());
+            System.out.println("end");
         }
     }
 }
