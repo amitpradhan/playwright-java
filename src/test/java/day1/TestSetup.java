@@ -13,7 +13,7 @@ public class TestSetup {
                 Browser browser = playwright.webkit().launch();
                 Page page = browser.newPage();
                 page.navigate("https://playwright.dev/");
-                System.out.println("Test");
+                System.out.println("Test1");
                 page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("example.png")));
 //
     }
