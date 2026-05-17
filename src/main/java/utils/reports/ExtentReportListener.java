@@ -14,6 +14,14 @@ public class ExtentReportListener implements ITestListener {
     private static ExtentReports extent;
     private static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
 
+    /**
+     * Exposes the current thread-safe ExtentTest instance.
+     * This allows LogUtils to route live Log4j steps directly into the report.
+     */
+    public static ExtentTest getTest() {
+        return test.get();
+    }
+
     @Override
     public void onStart(ITestContext context) {
         ExtentSparkReporter sparkReporter = new ExtentSparkReporter("target/ExtentReport.html");
@@ -23,6 +31,7 @@ public class ExtentReportListener implements ITestListener {
         extent = new ExtentReports();
         extent.attachReporter(sparkReporter);
         extent.setSystemInfo("Environment", "QA");
+        extent.setSystemInfo("Framework", "Playwright-Java");
     }
 
     @Override
@@ -47,7 +56,7 @@ public class ExtentReportListener implements ITestListener {
     public void onTestSuccess(ITestResult result) {
         // Capture screenshot on Success
         String base64Screenshot = captureScreenshot(result);
-        test.get().pass("Test Passed Successfully",
+        test.get().pass("<b>Test Passed Successfully</b>",
                 MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
     }
 
@@ -55,7 +64,7 @@ public class ExtentReportListener implements ITestListener {
     public void onTestFailure(ITestResult result) {
         // Capture screenshot on Failure along with the error log
         String base64Screenshot = captureScreenshot(result);
-        test.get().fail("Test Failed: " + result.getThrowable(),
+        test.get().fail("<b>Test Failed: </b>" + result.getThrowable(),
                 MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
     }
 

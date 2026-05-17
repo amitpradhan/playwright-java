@@ -24,7 +24,7 @@ public class LoginTestUsingMain {
             loginPage.login("student", "Password123");
 
             // Verify Result
-            String header = loginPage.getStatusMessage();
+            String header = loginPage.getSuccessMessage();
             if (header.contains("Logged In Successfully")) {
                 System.out.println("Test Passed: Login Successful!");
             } else {
