@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Regression Suite">
+
+    <listeners>
+        <listener class-name="utils.reports.ExtentReportListener" />
+    </listeners>
+
+    <test name="Practice Site UI Tests">
+        <classes>
+            <!-- Original login scenarios -->
+            <class name="day5.LoginTest">
+                <methods>
+                    <include name="testSuccessfulLogin" />
+                    <include name="testInvalidLogin" />
+                </methods>
+            </class>
+
+            <!-- New dashboard navigation validation scenarios -->
+            <class name="day6.HomePageTest">
+                <methods>
+                    <include name="testLogoutButtonPresence" />
+                    <include name="testMenuAvailabilityAndNavigation" />
+                </methods>
+            </class>
+
+            <class name="day6.PracticePageTest">
+                <methods>
+                    <include name="testLinkCountInPracticePage" />
+                    <include name="testForBrokenLinksInPracticePage" />
+                </methods>
+            </class>
+        </classes>
+    </test>
+
+</suite>
