@@ -5,8 +5,10 @@ import com.microsoft.playwright.APIResponse;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import utils.reports.LogUtils;
+import com.microsoft.playwright.options.RequestOptions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class LinkUtils {
@@ -66,4 +68,40 @@ public class LinkUtils {
 
         return brokenLinks;
     }
+
+
+    /**
+     * Optimized concurrent method using Java Parallel Streams for processing massive sets of links safely.
+     * Keeps all other framework execution paths running smoothly without impact.
+     */
+    public static List<String> checkBrokenLinksParallel(Page page, List<String> urls) {
+        LogUtils.info("Initiating high-speed parallel link validation sweep across " + urls.size() + " endpoints.");
+
+        // Wrap with synchronized collection layer to keep multi-threaded array insertions thread-safe
+        List<String> brokenLinks = java.util.Collections.synchronizedList(new ArrayList<>());
+        APIRequestContext requestContext = page.context().request();
+
+        urls.parallelStream().forEach(url -> {
+            try {
+                // Utilizing com.microsoft.playwright.options.RequestOptions to pass a clean 5-second timeout gate
+                APIResponse response = requestContext.get(url,
+                        RequestOptions.create().setTimeout(5000));
+
+                int statusCode = response.status();
+                if (statusCode >= 400) {
+                    LogUtils.warn("Broken Link Discovered via Parallel Sweep -> " + url + " [Status: " + statusCode + "]");
+                    brokenLinks.add(url);
+                } else {
+                    LogUtils.debug("Parallel Link Health OK -> Status: " + statusCode + " for URL: " + url);
+                }
+            } catch (Exception e) {
+                LogUtils.debug("Parallel Engine Drop: Endpoint unreachable or timeout -> " + url);
+                brokenLinks.add(url);
+            }
+        });
+
+        return brokenLinks;
+    }
+
+
 }
