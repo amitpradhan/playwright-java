@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Regression Suite">
+
+    <listeners>
+        <listener class-name="utils.reports.ExtentReportListener" />
+    </listeners>
+
+    <test name="API Endpoint Metrics Tests">
+        <classes>
+<!--            <class name="day8_api_start.ApiHealthCheckTest" />-->
+
+<!--            <class name="day9.ApiUsersTest" />-->
+
+
+            <class name="day9.ApiUserCrudTest">
+                <methods>
+                    <include name="testCreateUser" />
+                    <include name="testReadUser" />
+                    <include name="testUpdateUserPut" />
+                    <include name="testPartialUpdateUserPatch" />
+                    <include name="testDeleteUser" />
+                    <include name="testVerifyUserNotFoundAfterDelete" />
+                </methods>
+            </class>
+        </classes>
+    </test>
+
+</suite>

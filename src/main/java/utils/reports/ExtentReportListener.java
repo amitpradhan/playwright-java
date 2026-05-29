@@ -52,20 +52,32 @@ public class ExtentReportListener implements ITestListener {
         test.set(extentTest);
     }
 
+
     @Override
     public void onTestSuccess(ITestResult result) {
-        // Capture screenshot on Success
         String base64Screenshot = captureScreenshot(result);
-        test.get().pass("<b>Test Passed Successfully</b>",
-                MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
+
+        // Guard check: Only build media if a browser screenshot string actually exists
+        if (base64Screenshot != null && !base64Screenshot.isEmpty()) {
+            test.get().pass("<b>Test Passed Successfully</b>",
+                    MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
+        } else {
+            test.get().pass("<b>Test Passed Successfully</b> (No screenshot captured for non-UI test)");
+        }
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        // Capture screenshot on Failure along with the error log
         String base64Screenshot = captureScreenshot(result);
-        test.get().fail("<b>Test Failed: </b>" + result.getThrowable(),
-                MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
+        String errorMessage = "<b>Test Failed: </b>" + result.getThrowable();
+
+        // Guard check: Prevent ExtentReports from crashing on pure API or background task failures
+        if (base64Screenshot != null && !base64Screenshot.isEmpty()) {
+            test.get().fail(errorMessage,
+                    MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
+        } else {
+            test.get().fail(errorMessage + "<br><span style='color:red;'>[Note: No UI viewport active to capture screenshots]</span>");
+        }
     }
 
     @Override
