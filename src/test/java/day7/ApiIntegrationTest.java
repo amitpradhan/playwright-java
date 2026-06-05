@@ -33,7 +33,7 @@ public class ApiIntegrationTest {
         // Mimic a real browser request to bypass proxy/firewall filtering
         headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
-        APIResponse response = ApiUtils.get(requestContext, "/api/users?page=2", headers);
+        APIResponse response = ApiUtils.get(requestContext, "/utils/api/users?page=2", headers);
 
         LogUtils.info("GET Response status received: " + response.status());
         Assert.assertEquals(response.status(), 200, "GET request did not return an OK status!");
@@ -48,7 +48,7 @@ public class ApiIntegrationTest {
         bodyPayload.put("name", "John Doe");
         bodyPayload.put("job", "QA Lead Architect");
 
-        APIResponse response = ApiUtils.post(requestContext, "/api/users", bodyPayload, headers);
+        APIResponse response = ApiUtils.post(requestContext, "/utils/api/users", bodyPayload, headers);
 
         LogUtils.info("POST Response status received: " + response.status());
         Assert.assertEquals(response.status(), 201, "POST request did not create resource status correctly!");
@@ -76,7 +76,7 @@ public class ApiIntegrationTest {
         updatedPayload.put("name", "John Doe");
         updatedPayload.put("job", "Principal Engineering Director");
 
-        APIResponse response = ApiUtils.put(requestContext, "/api/users/" + targetId, updatedPayload, headers);
+        APIResponse response = ApiUtils.put(requestContext, "/utils/api/users/" + targetId, updatedPayload, headers);
 
         LogUtils.info("PUT Response status received: " + response.status());
         Assert.assertEquals(response.status(), 200, "PUT request modification operations dropped execution failure anomalies!");
@@ -89,7 +89,7 @@ public class ApiIntegrationTest {
     public void testRemoveUserRecord() {
         String targetId = (createdUserId != null) ? createdUserId : "2";
 
-        APIResponse response = ApiUtils.delete(requestContext, "/api/users/" + targetId, null);
+        APIResponse response = ApiUtils.delete(requestContext, "/utils/api/users/" + targetId, null);
 
         LogUtils.info("DELETE Response status received: " + response.status());
         // ReqRes mock service layer safely structural rules define 204 No Content output sequences upon resource removals
