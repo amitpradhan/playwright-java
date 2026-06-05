@@ -11,12 +11,20 @@
     <!-- Parameter tuning can go here (e.g., thread counts for parallel execution) -->
     <test name="Login UI Tests">
         <classes>
-            <class name="day7.ApiIntegrationTest">
+<!--            <class name="day7.ApiIntegrationTest">-->
+<!--                <methods>-->
+<!--                    <include name="testGetUsersList" />-->
+<!--                    <include name="testCreateUserRecord" />-->
+<!--                    <include name="testUpdateUserRecord" />-->
+<!--                    <include name="testRemoveUserRecord" />-->
+<!--                </methods>-->
+<!--            </class>-->
+
+            <class name="day10.ApiOAuth2Test">
                 <methods>
-                    <include name="testGetUsersList" />
-                    <include name="testCreateUserRecord" />
-                    <include name="testUpdateUserRecord" />
-                    <include name="testRemoveUserRecord" />
+                    <include name="testExtractAccessToken" />
+                    <include name="testVerifyTokenWithAuthMeEndpoint" />
+                    <include name="testTokenExpirationAndAutoRefresh" />
                 </methods>
             </class>
         </classes>

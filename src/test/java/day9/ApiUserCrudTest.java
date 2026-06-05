@@ -166,5 +166,7 @@ public class ApiUserCrudTest {
         LogUtils.info("Cleaning execution contexts for CRUD suite.");
         if (requestContext != null) requestContext.dispose();
         if (playwright != null) playwright.close();
-    }
+        ;
+ }
+
 }
