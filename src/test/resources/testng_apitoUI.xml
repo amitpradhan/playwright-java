@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="Regression Suite">
+
+    <!-- Wire up the listener here -->
+    <listeners>
+        <listener class-name="utils.reports.ExtentReportListener" />
+    </listeners>
+
+    <!-- Parameter tuning can go here (e.g., thread counts for parallel execution) -->
+    <test name="Login UI Tests">
+        <classes>
+            <class name="day11.ApiToUiUserTest">
+
+            </class>
+        </classes>
+
+    </test>
+
+</suite>
