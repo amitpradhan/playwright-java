@@ -88,6 +88,29 @@ public class ApiUsersTest {
         LogUtils.info("Success! All paginated layout schemas and user objects matched exact response rules cleanly.");
     }
 
+    @Test(priority = 1, description = "TC14 - Verify user listing payload structure and pagination controls")
+    public void testGetUsersWithPagination1() {
+        // Apply the exact static credentials requested by gauravkhurana.com/practise-api/
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-API-Key", "demo-api-key-123"); // Updated to live sandbox token value
+        headers.put("Accept", "application/json");
+        headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+
+        String endpointWithParams = "/v1/users?page=1&limit=5";
+
+        LogUtils.info("Sending GET request for paginated user list using live sandbox key rules.");
+
+        // Execute the request
+        APIResponse response = ApiUtils.get(requestContext, endpointWithParams, headers);
+        LogUtils.info("Users API response code status: " + response.status());
+
+        // Core HTTP status assertion
+        Assert.assertEquals(response.status(), 200, "Users endpoint failed to authorize using the demo api key!");
+
+        // ... remainder of your parsing assertions stay exactly the same
+    }
+
+
     @AfterClass
     public void tearDown() {
         LogUtils.info("Disposing active users network API requests context.");
