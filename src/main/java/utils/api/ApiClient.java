@@ -20,12 +20,6 @@ import java.util.Map;
  * - Response parsing and validation helpers
  * - Common assertion utilities
  * - Better error handling and logging
- *
- * Usage Examples:
- * - POST: ApiClient.post(requestContext, "/users", payload, headers).expectStatus(201)
- * - GET: ApiClient.get(requestContext, "/users/1", headers).expectStatus(200).parseJson()
- * - PUT: ApiClient.put(requestContext, "/users/1", payload, headers).validateResponse()
- * - DELETE: ApiClient.delete(requestContext, "/users/1", headers).expectStatus(204)
  */
 public class ApiClient {
 
@@ -57,8 +51,6 @@ public class ApiClient {
         public String getBody() {
             return rawResponse.text();
         }
-
-        // Note: Playwright APIResponse doesn't expose header access in the current version
 
         /**
          * Parse response body as JSON object
@@ -125,24 +117,24 @@ public class ApiClient {
         }
 
         /**
-         * Validate response body contains JSON field with expected value
+         * Validate response body contains JSON field with expected value (Supports dot-notation paths)
          */
         public ApiResponse validateField(String fieldPath, Object expectedValue) {
             try {
                 JsonObject json = parseJson();
-                JsonElement element = json.get(fieldPath);
-                
-                if (element == null) {
+                JsonElement element = getNestedElement(json, fieldPath);
+
+                if (element == null || element.isJsonNull()) {
                     String errorMsg = "Expected field '" + fieldPath + "' not found in response";
                     LogUtils.error(errorMsg, new Exception(errorMsg));
                     throw new AssertionError(errorMsg);
                 }
 
-                Object actualValue = element.isJsonPrimitive() ? 
+                Object actualValue = element.isJsonPrimitive() ?
                         element.getAsJsonPrimitive().getAsString() : element.toString();
 
                 if (!actualValue.equals(String.valueOf(expectedValue))) {
-                    String errorMsg = "Field value mismatch! Field: " + fieldPath + 
+                    String errorMsg = "Field value mismatch! Field: " + fieldPath +
                             ", Expected: " + expectedValue + ", Got: " + actualValue;
                     LogUtils.error(errorMsg, new Exception(errorMsg));
                     throw new AssertionError(errorMsg);
@@ -159,14 +151,14 @@ public class ApiClient {
         }
 
         /**
-         * Validate response contains specific field
+         * Validate response contains specific field (Supports dot-notation paths)
          */
         public ApiResponse validateFieldExists(String fieldPath) {
             try {
                 JsonObject json = parseJson();
-                JsonElement element = json.get(fieldPath);
-                
-                if (element == null) {
+                JsonElement element = getNestedElement(json, fieldPath);
+
+                if (element == null || element.isJsonNull()) {
                     String errorMsg = "Expected field '" + fieldPath + "' not found in response";
                     LogUtils.error(errorMsg, new Exception(errorMsg));
                     throw new AssertionError(errorMsg);
@@ -180,6 +172,23 @@ public class ApiClient {
                 LogUtils.error("Field existence validation error", e);
                 throw new RuntimeException("Field validation failed", e);
             }
+        }
+
+        /**
+         * Helper method to recursively resolve dot-notation paths safely
+         */
+        private JsonElement getNestedElement(JsonObject json, String path) {
+            if (!path.contains(".")) {
+                return json.get(path);
+            }
+            String[] parts = path.split("\\.");
+            JsonObject currentObj = json;
+            for (int i = 0; i < parts.length - 1; i++) {
+                JsonElement element = currentObj.get(parts[i]);
+                if (element == null || !element.isJsonObject()) return null;
+                currentObj = element.getAsJsonObject();
+            }
+            return currentObj.get(parts[parts.length - 1]);
         }
 
         /**
@@ -200,23 +209,13 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute GET request
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
     public static ApiResponse get(APIRequestContext requestContext, String endpoint, Map<String, String> headers) {
         LogUtils.info("Executing: GET " + endpoint);
-        
         try {
             RequestOptions options = RequestOptions.create();
             if (headers != null && !headers.isEmpty()) {
                 headers.forEach(options::setHeader);
             }
-            
             APIResponse response = requestContext.get(endpoint, options);
             LogUtils.debug("GET request completed. Status: " + response.status());
             return new ApiResponse(response, endpoint, "GET");
@@ -226,26 +225,13 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute GET request with no headers
-     */
     public static ApiResponse get(APIRequestContext requestContext, String endpoint) {
         return get(requestContext, endpoint, null);
     }
 
-    /**
-     * Execute POST request with JSON payload
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param payload Request payload as Map (will be converted to JSON)
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
-    public static ApiResponse post(APIRequestContext requestContext, String endpoint, 
+    public static ApiResponse post(APIRequestContext requestContext, String endpoint,
                                    Map<String, Object> payload, Map<String, String> headers) {
         LogUtils.info("Executing: POST " + endpoint);
-        
         try {
             RequestOptions options = RequestOptions.create();
             if (headers != null && !headers.isEmpty()) {
@@ -254,7 +240,6 @@ public class ApiClient {
             if (payload != null && !payload.isEmpty()) {
                 options.setData(payload);
             }
-            
             APIResponse response = requestContext.post(endpoint, options);
             LogUtils.debug("POST request completed. Status: " + response.status());
             return new ApiResponse(response, endpoint, "POST");
@@ -264,28 +249,14 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute POST request with JSON payload and no custom headers
-     */
     public static ApiResponse post(APIRequestContext requestContext, String endpoint, Map<String, Object> payload) {
         return post(requestContext, endpoint, payload, null);
     }
 
-    /**
-     * Execute POST request with form-encoded payload
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param formData Form data to send (will be URL-encoded)
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
     public static ApiResponse postFormEncoded(APIRequestContext requestContext, String endpoint,
                                               Map<String, String> formData, Map<String, String> headers) {
         LogUtils.info("Executing: POST " + endpoint + " (form-encoded)");
-        
         try {
-            // Build form-encoded body
             StringBuilder formBody = new StringBuilder();
             if (formData != null && !formData.isEmpty()) {
                 int count = 0;
@@ -298,11 +269,10 @@ public class ApiClient {
 
             RequestOptions options = RequestOptions.create()
                     .setHeader("Content-Type", "application/x-www-form-urlencoded");
-            
+
             if (headers != null && !headers.isEmpty()) {
                 headers.forEach(options::setHeader);
             }
-            
             options.setData(formBody.toString());
 
             APIResponse response = requestContext.post(endpoint, options);
@@ -314,19 +284,9 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute PUT request with JSON payload
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param payload Request payload as Map (will be converted to JSON)
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
     public static ApiResponse put(APIRequestContext requestContext, String endpoint,
                                   Map<String, Object> payload, Map<String, String> headers) {
         LogUtils.info("Executing: PUT " + endpoint);
-        
         try {
             RequestOptions options = RequestOptions.create();
             if (headers != null && !headers.isEmpty()) {
@@ -335,7 +295,6 @@ public class ApiClient {
             if (payload != null && !payload.isEmpty()) {
                 options.setData(payload);
             }
-
             APIResponse response = requestContext.put(endpoint, options);
             LogUtils.debug("PUT request completed. Status: " + response.status());
             return new ApiResponse(response, endpoint, "PUT");
@@ -345,26 +304,13 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute PUT request with JSON payload and no custom headers
-     */
     public static ApiResponse put(APIRequestContext requestContext, String endpoint, Map<String, Object> payload) {
         return put(requestContext, endpoint, payload, null);
     }
 
-    /**
-     * Execute PATCH request with JSON payload
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param payload Request payload as Map (will be converted to JSON)
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
     public static ApiResponse patch(APIRequestContext requestContext, String endpoint,
                                     Map<String, Object> payload, Map<String, String> headers) {
         LogUtils.info("Executing: PATCH " + endpoint);
-        
         try {
             RequestOptions options = RequestOptions.create();
             if (headers != null && !headers.isEmpty()) {
@@ -373,7 +319,6 @@ public class ApiClient {
             if (payload != null && !payload.isEmpty()) {
                 options.setData(payload);
             }
-
             APIResponse response = requestContext.patch(endpoint, options);
             LogUtils.debug("PATCH request completed. Status: " + response.status());
             return new ApiResponse(response, endpoint, "PATCH");
@@ -383,30 +328,17 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute PATCH request with JSON payload and no custom headers
-     */
     public static ApiResponse patch(APIRequestContext requestContext, String endpoint, Map<String, Object> payload) {
         return patch(requestContext, endpoint, payload, null);
     }
 
-    /**
-     * Execute DELETE request
-     *
-     * @param requestContext APIRequestContext for HTTP requests
-     * @param endpoint API endpoint path
-     * @param headers Custom headers (null for default headers)
-     * @return ApiResponse wrapper for fluent assertions
-     */
     public static ApiResponse delete(APIRequestContext requestContext, String endpoint, Map<String, String> headers) {
         LogUtils.info("Executing: DELETE " + endpoint);
-        
         try {
             RequestOptions options = RequestOptions.create();
             if (headers != null && !headers.isEmpty()) {
                 headers.forEach(options::setHeader);
             }
-
             APIResponse response = requestContext.delete(endpoint, options);
             LogUtils.debug("DELETE request completed. Status: " + response.status());
             return new ApiResponse(response, endpoint, "DELETE");
@@ -416,16 +348,10 @@ public class ApiClient {
         }
     }
 
-    /**
-     * Execute DELETE request with no custom headers
-     */
     public static ApiResponse delete(APIRequestContext requestContext, String endpoint) {
         return delete(requestContext, endpoint, null);
     }
 
-    /**
-     * Build headers map with common defaults
-     */
     public static Map<String, String> buildHeaders() {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
@@ -434,36 +360,24 @@ public class ApiClient {
         return headers;
     }
 
-    /**
-     * Build headers with API key authentication
-     */
     public static Map<String, String> buildHeadersWithApiKey(String apiKey) {
         Map<String, String> headers = buildHeaders();
         headers.put("X-API-Key", apiKey);
         return headers;
     }
 
-    /**
-     * Build headers with Bearer token authentication
-     */
     public static Map<String, String> buildHeadersWithBearerToken(String token) {
         Map<String, String> headers = buildHeaders();
         headers.put("Authorization", "Bearer " + token);
         return headers;
     }
 
-    /**
-     * Build headers with custom authorization header
-     */
     public static Map<String, String> buildHeadersWithAuth(String authScheme, String authValue) {
         Map<String, String> headers = buildHeaders();
         headers.put("Authorization", authScheme + " " + authValue);
         return headers;
     }
 
-    /**
-     * Add custom header to existing headers map
-     */
     public static Map<String, String> addHeader(Map<String, String> headers, String key, String value) {
         if (headers == null) {
             headers = new HashMap<>();
@@ -472,9 +386,6 @@ public class ApiClient {
         return headers;
     }
 
-    /**
-     * URL encode a string
-     */
     private static String urlEncode(String value) {
         try {
             return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8.name()).replace("+", "%20");
@@ -484,4 +395,3 @@ public class ApiClient {
         }
     }
 }
-
