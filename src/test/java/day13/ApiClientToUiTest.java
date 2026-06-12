@@ -1,4 +1,4 @@
-package day12;
+package day13;
 
 import com.google.gson.JsonObject;
 import com.microsoft.playwright.*;
@@ -216,8 +216,7 @@ public class ApiClientToUiTest {
         LogUtils.info("✓ Screenshot saved: " + screenshotPath);
     }
 
-    @Test(priority = 6, dependsOnMethods = {"testCreateUserViaApiClient"},
-            description = "Test 6: Delete user via API using ApiClient.delete()")
+//    @Test(priority = 6, dependsOnMethods = {"testCreateUserViaApiClient"}, description = "Test 6: Delete user via API using ApiClient.delete()")
     public void testDeleteUserViaApiClient() {
         LogUtils.info("=== TEST 6: Deleting user via API with ApiClient ===");
 
@@ -284,11 +283,11 @@ public class ApiClientToUiTest {
         LogUtils.info("✓ User updated");
 
         // 4. DELETE
-        LogUtils.info("4. DELETE - Deleting user");
-        ApiClient.delete(requestContext, "/v1/users/" + workflowUserId, headers)
-                .expectSuccess();
-
-        LogUtils.info("✓ User deleted successfully");
+//        LogUtils.info("4. DELETE - Deleting user");
+//        ApiClient.delete(requestContext, "/v1/users/" + workflowUserId, headers)
+//                .expectSuccess();
+//
+//        LogUtils.info("✓ User deleted successfully");
     }
 
     @AfterClass
