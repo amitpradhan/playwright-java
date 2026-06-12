@@ -1,0 +1,10 @@
+prompts -
+1) run all the tests in class ApiToUiUserTest
+
+2) Create generic methods to perform post , get , put and delete action on given endpoints  using playwright under package
+C:\Selenium\Playwright\Plyawight-Java\src\main\java\utils
+ 
+Add a new util class for the same .
+Scan existing code base to understand existing structure of the api tests
+ 
+3) Remove playwright from class name PlaywrightApiClient and refactor other classes
